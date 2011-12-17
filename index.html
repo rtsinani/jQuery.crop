@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+	<title>jQuery Crop</title>
+	<link href="style.css" rel="stylesheet" />
+	<link href="resources/js/crop/jquery.crop.css" rel="stylesheet" />
+	<script src="resources/js/jquery-1.7.1.min.js"></script>
+	<script src="resources/js/crop/jquery.crop.js"></script>
+</head>
+<body>
+	<div id="wrapper">
+		<h1>jQuery.crop</h1>
+		
+		<div class="image_decorator">
+			<img alt="jQuery Crop" id="example" src="resources/images/example.jpg" wdth="480" height="360" />
+		</div>
+		
+		<br /><br />
+		<form acrion="#" method="post" onsubmit="return validateForm();">
+			X: <input id="x" name="x" type="text" /><br />
+			Y: <input id="y" name="y" type="text" /><br />
+			Width: <input id="width" name="width" type="text" /><br />
+			Height: <input id="height" name="height" type="text" /><br />
+			<input type="submit" value="Crop Image" />
+		</form>
+	</div>
+	
+	<script>
+		$(function () {
+			$('#example').imageCrop({ 
+				displayPreview	: true,
+				displaySize			: true,
+				overlayOpacity	: 0.25,
+				onSelect				: updateForm
+			});
+			
+			var selectionExists,
+				jx 			= $('input#x'),
+				jy 			= $('input#y'),
+				jwidth 	= $('input#width'),
+				jheight = $('input#height');
+				
+			function updateForm (crop) {
+				jx.val(crop.selectionX);
+				jy.val(crop.selectionY);
+				jwidth.val(crop.selectionWidth);
+				jheight.val(crop.selectionHeight);
+				selectionExists = crop.selectionExists();
+			}
+		});
+	</script>
+</body>
+</html>

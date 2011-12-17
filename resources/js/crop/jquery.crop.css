@@ -1,0 +1,18 @@
+.image_crop_abs { position:absolute; }
+.image_crop_holder { position:relative; }
+.image_crop_overlay { background-color : #ffffff; overflow : hidden; }
+.image_crop_trigger { background:#000; }
+.image_crop_outline { background:#ffffff url('outline.gif'); overflow:hidden; }
+.image_crop_size_hint_background { background:#000; }
+.image_crop_size_hint_foreground { color:#fff; font-family:Verdana, Geneva, sans-serif; font-size:12px; text-shadow:0 -1px 0 #000; }
+.image_crop_resize_handler { background:#000; border:1px solid #fff; width:7px; height:7px; overflow:hidden; opacity:0.5; }
+.image_crop_preview_holder { border:3px solid #ef2929; box-shadow:0 0 5px #fff; overflow:hidden; position:absolute; }
+.image_crop_preview { border:none; position:absolute; }
+#image_crop_n_resize_handler { cursor:n-resize; }
+div#image-crop-preview-holder {
+	-moz-box-shadow : 0 0 5px #000000;
+	-webkit-box-shadow : 0 0 5px #000000;
+	border : 3px #ef2929 solid;
+	box-shadow : 0 0 5px #000000;
+}
+
