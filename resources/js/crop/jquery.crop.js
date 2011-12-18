@@ -1,4 +1,3 @@
-// Always wrap a plug-in in '(function($) { // Plug-in goes here }) (jQuery);'
 (function($) {
     $.imageCrop = function(object, options) {
         var _options = $.extend({
@@ -86,69 +85,9 @@
 					.addClass('image_crop_abs')
           .insertAfter(_jsizeHintBackground),
 
-				// Initialize a north/west resize handler
-        _jnwResizeHandler = $('<div />')
-					.attr('id', 'image_crop_nw_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a north resize handler
-        _jnResizeHandler = $('<div />')
-					.attr('id', 'image_crop_n_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a north/east resize handler
-        _jneResizeHandler = $('<div />')
-					.attr('id', 'image_crop_ne_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a west resize handler
-        _jwResizeHandler = $('<div />')
-					.attr('id', 'image_crop_w_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a east resize handler
-        _jeResizeHandler = $('<div />')
-					.attr('id', 'image_crop_e_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a south/west resize handler
-        _jswResizeHandler = $('<div />')
-					.attr('id', 'image_crop_sw_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a south resize handler
-        _jsResizeHandler = $('<div />')
-					.attr('id', 'image_crop_s_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
-
-				// Initialize a south/east resize handler
-        _jseResizeHandler = $('<div />')
-					.attr('id', 'image_crop_se_resize_handler')
-					.addClass('image_crop_resize_handler')
-					.addClass('image_crop_abs')
-					.css('opacity', 0.5)
-          .insertAfter(_jselection),
+				_resizeHandlerHalf 		= 3.5,
+				_resizeHandlerWidth 	= 7,
+				_resizeHandlerHeight 	= 7,
 
 				// Preview
         _jpreviewHolder = $('<div />')
@@ -159,15 +98,26 @@
         _jpreview = $('<img alt="Crop preview" id="image-crop-preview" />')
 					.addClass('image_crop_preview')
           .attr('src', _jimage.attr('src'))
-          .appendTo(_jpreviewHolder);
+          .appendTo(_jpreviewHolder),
 
-        // Initialize global variables
-        var _resizeHorizontally = true,
-            _resizeVertically = true,
-            _selectionExists,
-            _selectionOffset = [0, 0],
-            _selectionOrigin = [0, 0];
+        _selectionExists,
+        _resizeHorizontally = true,
+        _resizeVertically 	= true,
+        _selectionOffset 		= [0, 0],
+        _selectionOrigin 		= [0, 0],
+				_selectionCentre 		= [0, 0];
 
+				var _handlers = [
+					new Handler(_jselection, 'n', 0, -0.5),
+					new Handler(_jselection, 'ne', 0.5, -0.5),
+					new Handler(_jselection, 'e', 0.5, 0),
+					new Handler(_jselection, 'se', 0.5, 0.5),
+					new Handler(_jselection, 's', 0, 0.5),
+					new Handler(_jselection, 'sw', -0.5, 0.5),
+					new Handler(_jselection, 'w', -0.5, 0),
+					new Handler(_jselection, 'nw', -0.5, -0.5)
+				];
+				
         // Verify if the selection size is bigger than the minimum accepted
         // and set the selection existence accordingly
         if (_options.selectionWidth > _options.minSelect[0] &&
@@ -182,18 +132,15 @@
 
         if (_options.allowSelect) _jtrigger.mousedown(_setSelection);
         if (_options.allowMove) _jselection.mousedown(pickSelection);
-        if (_options.allowResize) $('div.image_crop_resize_handler').mousedown(pickResizeHandler);
+        if (_options.allowResize) $('.image_crop_resize_handler').mousedown(pickResizeHandler);
 
-
-        // Get the current offset of an element
-        function _getElementOffset(object) {
+        function _getElementOffset (object) {
             var offset = $(object).offset();
-
             return [offset.left, offset.top];
         };
 
         // Get the current mouse position relative to the image position
-        function _getMousePosition(event) {
+        function _getMousePosition (event) {
             var imageOffset = _getElementOffset(_jimage),
             	x 						= event.pageX - imageOffset[0],
               y 						= event.pageY - imageOffset[1];
@@ -213,21 +160,15 @@
                 selectionHeight : _options.selectionHeight,
                 selectionExists : function() { return _selectionExists; }
             };
-        };
+        }
 
-        // Update the overlay layer
         function _updateOverlay() {
-            _joverlay.css({
-                    display : _selectionExists ? 'block' : 'none'
-                });
-        };
+        	_joverlay.css('display', _selectionExists ? 'block' : 'none');
+        }
 
-        // Update the trigger layer
         function _updateTrigger() {
-            _jtrigger.css({
-                    cursor : _options.allowSelect ? 'crosshair' : 'default'
-                });
-        };
+        	_jtrigger.css('cursor', _options.allowSelect ? 'crosshair' : 'default');
+        }
 
         // Update the selection
         function _updateSelection() {
@@ -286,75 +227,23 @@
             }
         };
 
+				function _setSelectionCentre () {
+					_selectionCentre[0] = _selectionOrigin[0] + _options.selectionWidth / 2;
+					_selectionCentre[1] = _selectionOrigin[1] + _options.selectionHeight / 2;
+				}
+
         // Update the resize handlers
         function _updateResizeHandlers(action) {
             switch (action) {
                 case 'hide-all' :
-                    $('.image_crop_resize_handler').each(function() {
-                        $(this).css({
-                                display : 'none'
-                            });
-                    });
-
+                    $('.image_crop_resize_handler').hide();
                     break;
                 default :
-                    var display = (_selectionExists && _options.allowResize) ? 'block' : 'none';
-
-                    _jnwResizeHandler.css({
-                            cursor : 'nw-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] - Math.round(_jnwResizeHandler.width() / 2),
-                            top : _options.selectionPosition[1] - Math.round(_jnwResizeHandler.height() / 2)
-                        });
-
-                    _jnResizeHandler.css({
-                            cursor : 'n-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] + Math.round(_options.selectionWidth / 2 - _jneResizeHandler.width() / 2) - 1,
-                            top : _options.selectionPosition[1] - Math.round(_jneResizeHandler.height() / 2)
-                        });
-
-                    _jneResizeHandler.css({
-                            cursor : 'ne-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] + _options.selectionWidth - Math.round(_jneResizeHandler.width() / 2) - 1,
-                            top : _options.selectionPosition[1] - Math.round(_jneResizeHandler.height() / 2)
-                        });
-
-                    _jwResizeHandler.css({
-                            cursor : 'w-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] - Math.round(_jneResizeHandler.width() / 2),
-                            top : _options.selectionPosition[1] + Math.round(_options.selectionHeight / 2 - _jneResizeHandler.height() / 2) - 1
-                        });
-
-                    _jeResizeHandler.css({
-                            cursor : 'e-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] + _options.selectionWidth - Math.round(_jneResizeHandler.width() / 2) - 1,
-                            top : _options.selectionPosition[1] + Math.round(_options.selectionHeight / 2 - _jneResizeHandler.height() / 2) - 1
-                        });
-
-                    _jswResizeHandler.css({
-                            cursor : 'sw-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] - Math.round(_jswResizeHandler.width() / 2),
-                            top : _options.selectionPosition[1] + _options.selectionHeight - Math.round(_jswResizeHandler.height() / 2) - 1
-                        });
-
-                    _jsResizeHandler.css({
-                            cursor : 's-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] + Math.round(_options.selectionWidth / 2 - _jseResizeHandler.width() / 2) - 1,
-                            top : _options.selectionPosition[1] + _options.selectionHeight - Math.round(_jseResizeHandler.height() / 2) - 1
-                        });
-
-                    _jseResizeHandler.css({
-                            cursor : 'se-resize',
-                            display : display,
-                            left : _options.selectionPosition[0] + _options.selectionWidth - Math.round(_jseResizeHandler.width() / 2) - 1,
-                            top : _options.selectionPosition[1] + _options.selectionHeight - Math.round(_jseResizeHandler.height() / 2) - 1
-                        });
+										_setSelectionCentre();
+                    var display = (_selectionExists && _options.allowResize) ? 'block' : 'none';											
+										$.each(_handlers, function (i, handler) {
+											handler.update(display, _selectionCentre, _options.selectionWidth, _options.selectionHeight, _resizeHandlerHalf);
+										});
             }
         };
 
@@ -502,41 +391,19 @@
 
         // Set a new selection
         function _setSelection(event) {
-            // Prevent the default action of the event
             event.preventDefault();
-
-            // Prevent the event from being notified
             event.stopPropagation();
-
-            // Bind an event handler to the 'mousemove' event
-            $(document).mousemove(resizeSelection);
-
-            // Bind an event handler to the 'mouseup' event
+            $(document).mousemove(_resizeSelection);
             $(document).mouseup(_releaseSelection);
 
-            // If display preview option is enabled
             if (_options.displayPreview) {
-                // Bind an event handler to the 'mouseenter' event of the preview
-                // holder
-                _jpreviewHolder.mouseenter(function() {
-                        _updatePreview('focus');
-                    });
-
-                // Bind an event handler to the 'mouseleave' event of the preview
-                // holder
-                _jpreviewHolder.mouseleave(function() {
-                        _updatePreview('blur');
-                    });
+                _jpreviewHolder.mouseenter(function() { _updatePreview('focus'); });
+                _jpreviewHolder.mouseleave(function() { _updatePreview('blur'); });
             }
 
-            // Notify that a selection exists
             _selectionExists = true;
-
-            // Reset the selection size
             _options.selectionWidth = 0;
             _options.selectionHeight = 0;
-
-            // Get the selection origin
             _selectionOrigin = _getMousePosition(event);
 
             // And set its position
@@ -610,12 +477,10 @@
                     break;
                 case 'image_crop_e_resize_handler' :
                     _resizeVertically = false;
-
                     break;
                 case 'image_crop_sw_resize_handler' :
+										_options.selectionPosition[0] = _selectionOrigin[0];
                     _selectionOrigin[0] += _options.selectionWidth;
-                    _options.selectionPosition[0] = _selectionOrigin[0] - _options.selectionWidth;
-
                     break;
                 case 'image_crop_s_resize_handler' :
                     _resizeHorizontally = false;
@@ -624,7 +489,7 @@
             }
 
             // Bind an event handler to the 'mousemove' event
-            $(document).mousemove(resizeSelection);
+            $(document).mousemove(_resizeSelection);
 
             // Bind an event handler to the 'mouseup' event
             $(document).mouseup(_releaseSelection);
@@ -635,7 +500,7 @@
         };
 
         // Resize the current selection
-        function resizeSelection(event) {
+        function _resizeSelection(event) {
             // Prevent the default action of the event
             event.preventDefault();
 
@@ -674,11 +539,8 @@
             }
 
             // Set the selection size
-            if (_resizeHorizontally)
-                _options.selectionWidth = width;
-
-            if (_resizeVertically)
-                _options.selectionHeight = height;
+            if (_resizeHorizontally) _options.selectionWidth = width;
+            if (_resizeVertically)   _options.selectionHeight = height;
 
             // If any aspect ratio is specified
             if (_options.aspectRatio) {
@@ -773,18 +635,10 @@
             _updateInterface('moveSelection');
         };
 
-        // Release the current selection
         function _releaseSelection(event) {
-            // Prevent the default action of the event
             event.preventDefault();
-
-            // Prevent the event from being notified
             event.stopPropagation();
-
-            // Unbind the event handler to the 'mousemove' event
             $(document).unbind('mousemove');
-
-            // Unbind the event handler to the 'mouseup' event
             $(document).unbind('mouseup');
 
             // Update the selection origin
@@ -820,8 +674,28 @@
             // Update only the needed elements of the plug-in interface
             // by specifying the sender of the current call
             _updateInterface('releaseSelection');
-        };
+        }
+
     };
+
+		var Handler = function (selection, direction, left, top) {
+			this.element = $('<div />')
+				.attr('id', 'image_crop_' + direction + '_resize_handler')
+				.addClass('image_crop_resize_handler')
+				.addClass('image_crop_resize_handler_' + direction)
+				.css('opacity', 0.5)
+        .insertAfter(selection);
+			this.left	= left;
+			this.top	= top;
+		};
+		Handler.prototype.handlerSize = 3.5;		
+		Handler.prototype.update = function (display, selectionCentre, selectionWidth, selectionHeight) {
+			this.element.css({
+				display	: display,
+				left		: selectionCentre[0] + Math.round(this.left * selectionWidth) 	- this.handlerSize - 1,
+				top			: selectionCentre[1] + Math.round(this.top 	* selectionHeight) 	- this.handlerSize - 1
+			});
+		};
 
     $.fn.imageCrop = function(customOptions) {
         //Iterate over each object
@@ -838,8 +712,6 @@
             image.src = currentObject.src;
         });
 
-        // Unless the plug-in is returning an intrinsic value, always have the
-        // function return the 'this' keyword to maintain chainability
         return this;
     };
 }) (jQuery);
