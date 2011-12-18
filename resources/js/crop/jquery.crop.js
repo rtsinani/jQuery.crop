@@ -1,5 +1,5 @@
 (function($) {
-    $.imageCrop = function(object, options) {
+    $.crop = function(object, options) {
         var _options = $.extend({
             allowMove : true,
             allowResize : true,
@@ -697,7 +697,7 @@
 			});
 		};
 
-    $.fn.imageCrop = function(customOptions) {
+    $.fn.crop = function(customOptions) {
         //Iterate over each object
         this.each(function() {
             var currentObject = this,
@@ -705,7 +705,7 @@
 
             // And attach imageCrop when the object is loaded
             image.onload = function() {
-                $.imageCrop(currentObject, customOptions);
+                $.crop(currentObject, customOptions);
             };
 
             // Reset the src because cached images don't fire load sometimes
