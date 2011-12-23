@@ -6,6 +6,7 @@
 	<link href="style.css" rel="stylesheet" />
 	<link href="resources/js/crop/jquery.crop.css" rel="stylesheet" />
 	<script src="resources/js/jquery-1.7.1.min.js"></script>
+	<script src="resources/js/jquery.pubsub.js"></script>
 	<script src="resources/js/crop/jquery.crop.js"></script>
 </head>
 <body>
@@ -29,10 +30,11 @@
 	<script>
 		$(function () {
 			$('#example').crop({ 
-				displayPreview	: true,
+				displayPreview	: false,
 				displaySize			: true,
 				overlayOpacity	: 0.25,
-				onSelect				: updateForm
+				onSelect				: updateForm,
+				onChange				: updateForm
 			});
 			
 			var selectionExists,
